@@ -1,0 +1,1286 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mixeur Jovial</title>
+<style>
+  :root {
+    --bg: #f3eee3;  --card: #fffcf6; --line: #e5dccb; --line-2: #efe8da;
+    --green: #2f5a3f; --green-d: #23452f; --green-soft: #e4ece1; --green-mid: #8fae8f;
+    --brown: #7a4f30; --brown-d: #5f3c23; --brown-soft: #f2e7d9;
+    --ink: #2a2219; --text: #4a3d2e; --muted: #85765f;
+    --ochre: #c49a3a; --rust: #a9452f;
+    --r: 14px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink); line-height: 1.5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); }
+  .page { max-width: 860px; margin: 0 auto; padding: 2.4rem 1.25rem 4rem; }
+
+  /* En-tête */
+  header.top { display: flex; align-items: center; gap: 1rem; margin-bottom: 2.2rem; }
+  .logo { width: 52px; height: 52px; flex: none; border-radius: 14px; background: var(--green);
+          display: grid; place-items: center; box-shadow: 0 4px 14px rgba(47, 90, 63, .25); }
+  header.top h1 { margin: 0; font: 600 1.85rem/1.1 "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+                  color: var(--green-d); letter-spacing: -.01em; }
+  header.top h1 .ver { font: 600 .7rem/1 system-ui, sans-serif; color: var(--brown); background: var(--brown-soft);
+                       border-radius: 99px; padding: .25rem .55rem; vertical-align: .45em; margin-left: .4rem; letter-spacing: .02em; }
+  header.top p { margin: .3rem 0 0; color: var(--muted); font-size: .95rem; }
+
+  /* Étapes */
+  .step { background: var(--card); border: 1px solid var(--line); border-radius: 20px;
+          padding: 1.8rem 1.9rem 1.9rem; margin-bottom: 1.4rem; box-shadow: 0 2px 10px rgba(90, 70, 40, .05); }
+  .step > .head { display: flex; gap: .95rem; align-items: flex-start; margin-bottom: 1.5rem; }
+  .num { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--green-soft); color: var(--green);
+         font-weight: 700; display: grid; place-items: center; font-size: .95rem; margin-top: .1rem; }
+  .head h2 { margin: 0; font-size: 1.3rem; color: var(--ink); font-weight: 650; }
+  .head p { margin: .15rem 0 0; color: var(--muted); font-size: .92rem; }
+  .head .side { margin-left: auto; align-self: center; }
+
+  .field { margin-bottom: 1.25rem; }
+  .field > label, .flabel { display: block; font-size: .85rem; font-weight: 600; color: var(--text); margin-bottom: .45rem; }
+  .hint { font-size: .82rem; color: var(--muted); margin-top: .4rem; }
+  .hint b { color: var(--text); font-weight: 600; }
+
+  input.title { width: 100%; font: inherit; font-size: 1.08rem; padding: .85rem 1rem; border: 1.5px solid var(--line);
+                border-radius: 12px; background: #fff; color: var(--ink); transition: border-color .15s, box-shadow .15s; }
+  input.title::placeholder { color: #b3a690; }
+  input.title:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 4px rgba(47, 90, 63, .12); }
+
+  /* Boutons */
+  button { font: inherit; border: none; border-radius: 12px; cursor: pointer; padding: .6rem 1.1rem;
+           background: var(--line-2); color: var(--ink); transition: background .15s, transform .05s; }
+  button:hover { background: #e6dcc8; }
+  button:active { transform: translateY(1px); }
+  button:focus-visible, select:focus-visible, .drop:focus-visible, input[type=range]:focus-visible, .switch input:focus-visible + .track {
+    outline: 3px solid rgba(47, 90, 63, .35); outline-offset: 2px; }
+  button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+  button.primary { background: var(--green); color: #fff; font-weight: 600; }
+  button.primary:hover { background: var(--green-d); }
+  button.brown { background: var(--brown); color: #fff; font-weight: 600; }
+  button.brown:hover { background: var(--brown-d); }
+  button.link { background: none; padding: .2rem .1rem; color: var(--green); font-size: .85rem; text-decoration: underline; text-underline-offset: 3px; }
+  button.link:hover { background: none; color: var(--green-d); }
+
+  /* Micro + jauge */
+  .microw { display: flex; gap: .6rem; }
+  select { flex: 1; min-width: 0; font: inherit; font-size: .92rem; padding: .65rem .75rem; border: 1.5px solid var(--line);
+           border-radius: 12px; background: #fff; color: var(--text); }
+  #micTest.on { background: var(--green-d); color: #fff; }
+
+  .meterbox { margin-top: .9rem; background: #faf6ee; border: 1px solid var(--line-2); border-radius: 14px; padding: .9rem 1rem .8rem; }
+  .meter { position: relative; height: 18px; border-radius: 99px; overflow: hidden;
+           background: linear-gradient(90deg, #efe3c6 0 44.4%, #dde8d9 44.4% 88.9%, #f1d6cc 88.9%); }
+  .mfill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 99px;
+           background: linear-gradient(90deg, #6f9774, var(--green)); transition: width .06s linear; }
+  .mfill.low { background: linear-gradient(90deg, #d8b867, var(--ochre)); }
+  .mfill.hot { background: linear-gradient(90deg, #cf7d64, var(--rust)); }
+  .mpeak { position: absolute; top: 2px; bottom: 2px; width: 3px; left: 0; border-radius: 2px; background: var(--ink); opacity: 0; transition: left .1s; }
+  .mlabels { position: relative; height: 1.2em; font-size: .72rem; color: var(--muted); margin-top: .35rem; }
+  .mlabels span { position: absolute; top: 0; white-space: nowrap; }
+  .mstatus { display: flex; align-items: baseline; gap: .8rem; margin-top: .45rem; }
+  #recTime { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1.05rem; min-width: 3.4em; }
+  #recHint { flex: 1; font-weight: 600; color: var(--muted); font-size: .92rem; }
+  #recHint.ok { color: var(--green); } #recHint.low { color: #93701b; } #recHint.hot { color: var(--rust); }
+  #meterDb { font-variant-numeric: tabular-nums; font-size: .78rem; color: var(--muted); }
+
+  button.rec { width: 100%; margin-top: 1.1rem; padding: 1rem; font-size: 1.08rem; font-weight: 650;
+               background: var(--brown); color: #fff; border-radius: 14px; }
+  button.rec:hover { background: var(--brown-d); }
+  button.rec.on { background: var(--ink); }
+  .dot { display: inline-block; width: .7em; height: .7em; border-radius: 50%; background: #fff; margin-right: .55em; vertical-align: .02em; }
+  button.rec.on .dot { border-radius: 2px; background: #e86a50; animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: .3; } }
+
+  .or { display: flex; align-items: center; gap: .9rem; color: var(--muted); font-size: .82rem; margin: 1.5rem 0 1.1rem; }
+  .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .drop { border: 1.5px dashed #c8bba1; border-radius: 14px; padding: 1.1rem 1rem; text-align: center; color: var(--text);
+          cursor: pointer; transition: border-color .15s, background .15s; font-size: .95rem; }
+  .drop small { display: block; color: var(--muted); font-size: .8rem; margin-top: .2rem; }
+  .drop:hover, .drop.over { border-color: var(--green); background: var(--green-soft); }
+
+  /* Montage */
+  .empty { border: 1.5px dashed var(--line); border-radius: 14px; padding: 1.8rem 1.2rem; text-align: center;
+           color: var(--muted); font-size: .92rem; }
+  .edtitle { display: flex; align-items: center; gap: .6rem; margin-bottom: .8rem; }
+  #edName { font-weight: 650; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wavewrap { position: relative; height: 190px; border-radius: 14px; overflow: hidden; background: #faf6ee;
+              border: 1px solid var(--line-2); touch-action: none; }
+  .wavewrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #ovl { cursor: crosshair; }
+  #edLoading { position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+               font-size: .9rem; color: var(--muted); background: rgba(250, 246, 238, .9); padding: 1rem; text-align: center; }
+  #edScroll { width: 100%; margin: .5rem 0 0; accent-color: var(--green); }
+  .edbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: .8rem; }
+  .edbar .grow { flex: 1; }
+  .zoom { display: inline-flex; gap: .3rem; }
+  .zoom button { padding: .55rem .7rem; min-width: 2.5rem; }
+  #edInfo { font-size: .88rem; color: var(--text); margin-top: .9rem; min-height: 1.4em; }
+  #edInfo .msg { display: block; color: var(--green); margin-top: .2rem; }
+  .edfoot { display: flex; flex-wrap: wrap; gap: .8rem; align-items: center; justify-content: space-between;
+            margin-top: 1.1rem; padding-top: 1rem; border-top: 1px solid var(--line-2); font-size: .8rem; color: var(--muted); }
+  kbd { font-family: inherit; font-size: .74rem; background: var(--line-2); border: 1px solid var(--line); border-bottom-width: 2px;
+        border-radius: 5px; padding: 0 .35rem; color: var(--text); }
+
+  /* Liste des fichiers */
+  .files { display: flex; flex-direction: column; gap: .6rem; }
+  .file { border: 1px solid var(--line-2); border-radius: 14px; padding: .85rem 1rem; background: #fff; transition: border-color .15s; }
+  .file.active { border-color: var(--green-mid); box-shadow: 0 0 0 3px var(--green-soft); }
+  .frow { display: flex; align-items: center; gap: .8rem; }
+  .fmain { flex: 1; min-width: 0; }
+  .fname { font-weight: 600; overflow-wrap: anywhere; }
+  .fmeta { font-size: .8rem; color: var(--muted); overflow-wrap: anywhere; }
+  .fact { display: flex; gap: .35rem; flex: none; }
+  .fact button { padding: .45rem .8rem; font-size: .85rem; }
+  button.x { background: transparent; color: #a39279; padding: .3rem .55rem; font-size: 1.15rem; line-height: 1; }
+  button.x:hover { background: var(--brown-soft); color: var(--rust); }
+  .fout { display: flex; align-items: center; gap: .8rem; margin-top: .7rem; flex-wrap: wrap; }
+  .fout audio { height: 34px; flex: 1; min-width: 200px; }
+  .fout a { font-size: .85rem; color: var(--green); font-weight: 600; }
+  .pill { display: inline-block; padding: .18rem .65rem; border-radius: 99px; font-size: .78rem; white-space: nowrap; font-weight: 600; }
+  .pill.wait { background: var(--line-2); color: var(--muted); }
+  .pill.run { background: #f6e8c5; color: #80600f; }
+  .pill.done { background: var(--green-soft); color: var(--green); }
+  .pill.err { background: #f6ddd5; color: var(--rust); }
+  .tag { color: var(--brown); }
+
+  /* Réglages du traitement */
+  .opts { margin-top: 1.6rem; border-top: 1px solid var(--line-2); padding-top: 1.4rem; }
+  .opt { display: flex; gap: .9rem; align-items: flex-start; padding: .55rem 0; cursor: pointer; }
+  .opt .txt b { display: block; font-weight: 600; color: var(--ink); }
+  .opt .txt span { font-size: .85rem; color: var(--muted); }
+  .switch { position: relative; flex: none; margin-top: .15rem; }
+  .switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+  .switch .track { display: block; width: 42px; height: 24px; border-radius: 99px; background: #d6cbb6; transition: background .15s; }
+  .switch .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+                          background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: transform .15s; }
+  .switch input:checked + .track { background: var(--green); }
+  .switch input:checked + .track::after { transform: translateX(18px); }
+
+  .pauses { margin: .3rem 0 .4rem 3.3rem; background: #faf6ee; border: 1px solid var(--line-2); border-radius: 14px;
+            padding: 1rem 1.1rem 1.05rem; transition: opacity .15s; }
+  .pauses.off { opacity: .45; pointer-events: none; }
+  .slider { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .1rem 1rem; margin-bottom: .85rem; }
+  .slider label { font-size: .88rem; color: var(--text); }
+  .slider output { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--green-d); background: #fff;
+                   border: 1px solid var(--line); border-radius: 8px; padding: .1rem .5rem; min-width: 4.2em; text-align: center; }
+  .slider input { grid-column: 1 / -1; width: 100%; accent-color: var(--green); margin: .35rem 0 0; }
+  .pfoot { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; flex-wrap: wrap; }
+  #pEx { font-size: .84rem; color: var(--muted); }
+
+  .export { margin-top: 1.6rem; }
+  #go { width: 100%; padding: 1rem; font-size: 1.08rem; border-radius: 14px; }
+  #goHint { text-align: center; font-size: .84rem; color: var(--muted); margin-top: .55rem; }
+  .bar { height: 6px; border-radius: 99px; background: var(--line-2); overflow: hidden; margin-top: 1rem; display: none; }
+  .bar.on { display: block; }
+  .bar > div { height: 100%; width: 0; background: var(--green); transition: width .3s; }
+  #status { font-size: .9rem; color: var(--text); margin-top: .7rem; min-height: 1.3em; }
+  #status:empty { display: none; }
+  details.log { margin-top: .5rem; font-size: .8rem; color: var(--muted); }
+  details.log summary { cursor: pointer; }
+  #log { font-family: ui-monospace, monospace; font-size: .74rem; white-space: pre-wrap; max-height: 9rem; overflow: auto;
+         background: #faf6ee; border-radius: 10px; padding: .6rem .7rem; margin-top: .4rem; }
+
+  #banner { display: none; background: #f8ecd0; border: 1px solid #e6d1a0; border-radius: 14px;
+            padding: .9rem 1.1rem; font-size: .9rem; margin-bottom: 1.4rem; }
+
+  /* Aide */
+  .help details { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 1rem 1.3rem; margin-bottom: .8rem; }
+  .help summary { cursor: pointer; font-weight: 600; color: var(--green-d); }
+  .help ul { margin: .8rem 0 .2rem; padding-left: 1.2rem; color: var(--text); font-size: .9rem; }
+  .help li { margin-bottom: .45rem; }
+  .foot { text-align: center; font-size: .8rem; color: var(--muted); margin-top: 2rem; }
+  .foot a { color: var(--green); }
+
+  @media (max-width: 620px) {
+    .page { padding-top: 1.4rem; }
+    .step { padding: 1.3rem 1.1rem 1.4rem; border-radius: 16px; }
+    .pauses { margin-left: 0; }
+    .microw { flex-direction: column; }
+    .frow { flex-wrap: wrap; }
+    .fact { width: 100%; justify-content: flex-end; }
+    .edfoot .keys { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="top">
+  <div class="logo" aria-hidden="true">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#f3eee3" stroke-width="2.6" stroke-linecap="round">
+      <line x1="5" y1="11" x2="5" y2="17"/><line x1="10" y1="6" x2="10" y2="22"/><line x1="15" y1="9" x2="15" y2="19"/>
+      <line x1="20" y1="4" x2="20" y2="24"/><line x1="25" y1="11" x2="25" y2="17"/>
+    </svg>
+  </div>
+  <div>
+    <h1>Mixeur Jovial<span class="ver">v2</span></h1>
+    <p>Enregistrez, montez et exportez vos histoires pour boîte à histoires.</p>
+  </div>
+</header>
+
+<div id="banner"></div>
+
+<!-- 1. Enregistrer -->
+<section class="step" id="step1">
+  <div class="head">
+    <span class="num">1</span>
+    <div><h2>Enregistrer</h2><p>Donnez un titre, vérifiez le niveau du micro, puis lancez-vous.</p></div>
+  </div>
+
+  <div class="field">
+    <label for="recTitle">Titre de l’histoire</label>
+    <input type="text" id="recTitle" class="title" placeholder="Par exemple : Le hérisson qui voulait voler" maxlength="80" autocomplete="off" />
+    <div class="hint" id="fname"></div>
+  </div>
+
+  <div class="field" style="margin-bottom:0">
+    <label for="micSel">Micro</label>
+    <div class="microw">
+      <select id="micSel" title="Micro utilisé, modifiable à tout moment"></select>
+      <button id="micTest" title="Allume le micro pour vérifier le niveau, sans enregistrer">Tester le micro</button>
+    </div>
+    <div class="meterbox">
+      <div class="meter" id="meter" title="Visez la zone verte quand vous parlez">
+        <div class="mfill" id="meterFill"></div><div class="mpeak" id="meterPeak"></div>
+      </div>
+      <div class="mlabels">
+        <span style="left:0">trop faible</span>
+        <span style="left:66.6%; transform:translateX(-50%)">bon niveau</span>
+        <span style="right:0">saturé</span>
+      </div>
+      <div class="mstatus"><span id="recTime">0:00</span><span id="recHint">Micro éteint</span><span id="meterDb"></span></div>
+    </div>
+  </div>
+
+  <button class="rec" id="recBtn"><span class="dot"></span><span id="recLbl">Enregistrer</span></button>
+
+  <div class="or">ou</div>
+  <div class="drop" id="drop" tabindex="0" role="button">
+    Importer des fichiers audio
+    <small>Glissez-les ici ou cliquez pour parcourir · MP3, WAV, M4A, OGG, FLAC…</small>
+  </div>
+  <input type="file" id="fileInput" multiple accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.oga,.opus,.flac,.wma,.aiff,.webm" hidden />
+</section>
+
+<!-- 2. Monter -->
+<section class="step" id="step2">
+  <div class="head">
+    <span class="num">2</span>
+    <div><h2>Monter</h2><p>Coupez les loupés. Tout peut être annulé, l’original reste intact.</p></div>
+  </div>
+
+  <div class="empty" id="edEmpty">
+    Le montage s’ouvre ici après chaque enregistrement.<br>
+    Pour un fichier importé, cliquez sur « Monter » dans la liste de l’étape 3.
+  </div>
+
+  <div id="editor" hidden>
+    <div class="edtitle">
+      <span id="edName"></span>
+      <button class="x" id="edClose" title="Fermer le montage">×</button>
+    </div>
+    <div class="wavewrap" id="wavewrap">
+      <canvas id="wave"></canvas>
+      <canvas id="ovl"></canvas>
+      <div id="edLoading">Chargement de l’onde…</div>
+    </div>
+    <input type="range" id="edScroll" min="0" max="0" value="0" step="1" aria-label="Se déplacer dans l’enregistrement" />
+    <div class="edbar">
+      <button id="edPlay" title="Espace">▶ Écouter</button>
+      <button id="edCut" class="brown" title="Suppr">✂ Couper la sélection</button>
+      <button id="edUndo" title="Ctrl+Z">↶ Annuler</button>
+      <button id="edRedo" title="Ctrl+Y">↷ Rétablir</button>
+      <span class="grow"></span>
+      <span class="zoom"><button id="zOut" title="Dézoomer">−</button><button id="zIn" title="Zoomer">+</button><button id="zAll" title="Voir tout l’enregistrement">Tout</button></span>
+    </div>
+    <div id="edInfo"></div>
+    <div class="edfoot">
+      <span class="keys"><kbd>Espace</kbd> écouter · <kbd>Suppr</kbd> couper · <kbd>Ctrl</kbd>+<kbd>Z</kbd> annuler · molette : zoom</span>
+      <span>
+        <button class="link" id="edReset" title="Annule toutes les coupes (vous pourrez encore revenir en arrière)">Revenir à l’original</button>
+        &nbsp;
+        <button class="primary" id="edDone">Passer à l’export ↓</button>
+      </span>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Exporter -->
+<section class="step" id="step3">
+  <div class="head">
+    <span class="num">3</span>
+    <div><h2>Exporter</h2><p>Choisissez le traitement, puis exportez en MP3 prêt pour la boîte.</p></div>
+  </div>
+
+  <div class="files" id="files"></div>
+  <div class="empty" id="emptyNote">Vos enregistrements et fichiers importés s’afficheront ici.</div>
+
+  <div class="opts">
+    <div class="flabel">Traitement</div>
+    <label class="opt">
+      <span class="switch"><input type="checkbox" id="optVoice" checked><span class="track"></span></span>
+      <span class="txt"><b>Optimiser la voix</b><span>Volume fort et régulier, voix plus claire, sans saturation.</span></span>
+    </label>
+    <label class="opt">
+      <span class="switch"><input type="checkbox" id="optNoise" checked><span class="track"></span></span>
+      <span class="txt"><b>Nettoyer le bruit de fond</b><span>Atténue le souffle et les bruits entre les phrases.</span></span>
+    </label>
+    <label class="opt">
+      <span class="switch"><input type="checkbox" id="optPauses" checked><span class="track"></span></span>
+      <span class="txt"><b>Raccourcir les longues pauses</b><span>Coupe automatiquement les blancs trop longs.</span></span>
+    </label>
+    <div class="pauses" id="pauses">
+      <div class="slider">
+        <label for="pMin">Couper les pauses de plus de</label>
+        <output id="pMinV" for="pMin"></output>
+        <input type="range" id="pMin" min="0.5" max="5" step="0.1" />
+      </div>
+      <div class="slider">
+        <label for="pKeep">Les ramener à</label>
+        <output id="pKeepV" for="pKeep"></output>
+        <input type="range" id="pKeep" min="0.2" max="3" step="0.1" />
+      </div>
+      <div class="pfoot">
+        <span id="pEx"></span>
+        <button class="link" id="pReset">Valeurs par défaut</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="export">
+    <button class="primary" id="go" disabled>Exporter en MP3</button>
+    <div id="goHint"></div>
+    <div class="bar" id="barWrap"><div id="bar"></div></div>
+    <div id="status"></div>
+    <details class="log" id="logBox" hidden><summary>Détails techniques</summary><div id="log"></div></details>
+  </div>
+</section>
+
+<div class="help">
+  <details>
+    <summary>Conseils pour bien enregistrer</summary>
+    <ul>
+      <li>Micro à 15–20 cm de la bouche (une main écartée), un peu de côté pour éviter les « p » qui claquent. Gardez cette distance jusqu’au bout.</li>
+      <li>Pièce calme et « molle » : rideaux, canapé, tapis. Fenêtre fermée, ventilateur et machines coupés.</li>
+      <li>Parlez comme à un enfant assis en face de vous : un peu plus fort et plus lentement qu’en conversation, en articulant les fins de phrase.</li>
+      <li>Avant de commencer, « Tester le micro » et parlez : la jauge doit monter dans le vert. Dans le jaune, rapprochez-vous ; dans le rouge, reculez.</li>
+      <li>En cas de loupé, marquez une pause, reprenez la phrase, puis coupez le passage raté à l’étape 2.</li>
+    </ul>
+  </details>
+  <details>
+    <summary>Ce que fait le traitement</summary>
+    <ul>
+      <li><b>Optimiser la voix</b> : ramène chaque histoire au même volume, fort et régulier (≈ −16 LUFS), retire les graves inutiles pour un petit haut-parleur, met la voix en avant et adoucit les « s ».</li>
+      <li><b>Nettoyer le bruit de fond</b> : mesure le bruit propre à chaque enregistrement, atténue le souffle continu et baisse le bruit entre les phrases.</li>
+      <li><b>Raccourcir les longues pauses</b> : tout blanc plus long que le seuil choisi est ramené à la durée choisie (par défaut, plus de 1,5 s → 0,8 s). La détection s’adapte au niveau de chaque enregistrement.</li>
+      <li><b>Format</b> : MP3 mono, 16 kHz, 64 kbps. Un fichier est téléchargé directement ; plusieurs sont regroupés dans un ZIP. Seuls les fichiers nouveaux ou modifiés sont exportés à chaque clic.</li>
+      <li><b>Noms</b> : 35 caractères maximum, sans accents ni caractères spéciaux. Le nettoyage est automatique.</li>
+    </ul>
+  </details>
+  <p class="foot">Tout se passe sur votre ordinateur : vos enregistrements ne sont envoyés nulle part, aucune connexion n’est nécessaire.<br>
+  Moteur de traitement : FFmpeg et LAME (licence LGPL), dans le dossier « moteur ». <a href="moteur/SOURCES.md">Sources et licences</a> · <a href="test-moteur.html">Vérifier le moteur</a></p>
+</div>
+
+</div>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const drop = $('drop'), fileInput = $('fileInput'), filesEl = $('files');
+const go = $('go'), bar = $('bar'), logEl = $('log'), banner = $('banner');
+const SR = 16000;   // fréquence du montage = celle de la boîte
+
+const MOTEUR = new URL('./moteur/', location.href);   // dossier du moteur LGPL, à côté de cette page
+let M = null;                                          // module js/moteur.js, chargé au premier export
+function showBanner(html) { banner.style.display = 'block'; banner.innerHTML = html; }
+if (location.protocol === 'file:') {
+  showBanner('<b>Ouvrez Mixeur Jovial avec « Lancer Mixeur Jovial ».</b> Ouverte directement, la page ne peut pas charger son moteur de traitement : l’enregistrement et le montage fonctionnent, mais pas l’export. Double-cliquez sur « Lancer Mixeur Jovial.bat » dans le dossier de l’outil.');
+} else {
+  fetch(new URL('core/ffmpeg-core.wasm', MOTEUR), { method: 'HEAD' }).then(r => {
+    if (!r.ok) showBanner('<b>Moteur absent.</b> Le dossier « moteur » est introuvable à côté de cette page. Copiez-y le moteur compilé (voir le mode d’emploi), puis rechargez la page.');
+  }).catch(() => {});
+}
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+};
+
+/* ---------- État ---------- */
+let items = [];          // { file, target, status, label, url, pcm, segs, undo, redo, row }
+let running = false;
+let recording = false;
+
+/* ---------- Utilitaires ---------- */
+const sec = (x) => (Math.round(x * 10) / 10).toFixed(1).replace('.', ',');
+const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+function fmtSize(n) {
+  if (n < 1024 * 1024) return Math.round(n / 1024) + ' Ko';
+  return (n / 1024 / 1024).toFixed(1).replace('.', ',') + ' Mo';
+}
+function fmtTime(s, dec) {
+  s = Math.max(0, s);
+  const m = Math.floor(s / 60), r = s - m * 60;
+  return m + ':' + (dec ? r.toFixed(1).padStart(4, '0').replace('.', ',') : String(Math.floor(r)).padStart(2, '0'));
+}
+function sanitize(name) {
+  let base = name.replace(/\.[^.]+$/, '');
+  base = base.normalize('NFD').replace(/[̀-ͯ]/g, '')
+           .replace(/[^a-zA-Z0-9 _-]/g, '').trim().replace(/\s+/g, ' ');
+  if (!base) base = 'histoire';
+  if (base.length > 35) base = base.slice(0, 35).trim();
+  return base + '.mp3';
+}
+function uniqueName(name, taken) {
+  if (!taken.has(name)) { taken.add(name); return name; }
+  const stem = name.replace(/\.mp3$/, '');
+  for (let i = 2; ; i++) {
+    const suffix = '-' + i;
+    const cand = stem.slice(0, 35 - suffix.length) + suffix + '.mp3';
+    if (!taken.has(cand)) { taken.add(cand); return cand; }
+  }
+}
+function assignTargets() {
+  const taken = new Set();
+  for (const it of items) it.target = uniqueName(sanitize(it.file.name), taken);
+}
+const segLen = (segs) => segs.reduce((s, [a, b]) => s + b - a, 0);
+const isEdited = (it) => !!(it.pcm && it.segs &&
+  (it.segs.length !== 1 || it.segs[0][0] !== 0 || it.segs[0][1] !== it.pcm.length));
+
+/* ---------- Fichiers ---------- */
+drop.addEventListener('click', () => fileInput.click());
+drop.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
+fileInput.addEventListener('change', () => { const a = addFiles(fileInput.files); if (a.length) $('step3').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+['dragover', 'dragenter'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, () => drop.classList.remove('over')));
+drop.addEventListener('drop', e => { e.preventDefault(); const a = addFiles(e.dataTransfer.files); if (a.length) $('step3').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+
+function addFiles(list) {
+  const added = [];
+  for (const f of list) {
+    if (items.some(x => x.file.name === f.name && x.file.size === f.size && x.file.lastModified === f.lastModified)) continue;
+    const it = { file: f, status: 'wait', label: 'à exporter' };
+    items.push(it); added.push(it);
+  }
+  fileInput.value = '';
+  assignTargets();
+  renderFiles();
+  return added;
+}
+
+function renderFiles() {
+  $('emptyNote').hidden = items.length !== 0;
+  filesEl.innerHTML = '';
+  for (const it of items) {
+    const el = document.createElement('div');
+    el.className = 'file' + (ed.it === it ? ' active' : '');
+    const cut = isEdited(it) ? (it.pcm.length - segLen(it.segs)) / SR : 0;
+    const src = it.file.isRecording ? 'enregistrement' : esc(it.file.name);
+    el.innerHTML =
+      `<div class="frow">
+         <div class="fmain">
+           <div class="fname">${esc(it.target)}</div>
+           <div class="fmeta">${src} · ${fmtSize(it.file.size)}${cut > 0 ? ` · <span class="tag">✂ −${sec(cut)} s</span>` : ''}</div>
+         </div>
+         <span class="pill ${it.status}">${it.label}</span>
+         <span class="fact"><button class="edit" title="Couper les loupés">✂ Monter</button><button class="x" title="Retirer de la liste">×</button></span>
+       </div>`;
+    if (it.url) {
+      const out = document.createElement('div'); out.className = 'fout';
+      const au = document.createElement('audio');
+      au.controls = true; au.preload = 'none'; au.src = it.url;
+      const a = document.createElement('a');
+      a.href = it.url; a.download = it.target; a.textContent = 'Télécharger';
+      out.append(au, a); el.appendChild(out);
+    }
+    const [bEdit, bX] = el.querySelectorAll('.fact button');
+    bEdit.disabled = bX.disabled = it.status === 'run';
+    bEdit.addEventListener('click', () => openEditor(it, true));
+    bX.addEventListener('click', () => {
+      if (it.status === 'run') return;
+      if (ed.it === it) closeEditor();
+      if (it.url) URL.revokeObjectURL(it.url);
+      items.splice(items.indexOf(it), 1);
+      assignTargets(); renderFiles();
+    });
+    it.row = el;
+    filesEl.appendChild(el);
+  }
+  updateGo();
+}
+
+function setStatus(it, status, label) {
+  it.status = status; it.label = label;
+  const pill = it.row && it.row.querySelector('.pill');
+  if (pill) { pill.className = 'pill ' + status; pill.textContent = label; }
+}
+
+function updateGo() {
+  const todo = items.filter(i => i.status !== 'done').length;
+  go.disabled = running || recording || !todo;
+  go.textContent = todo > 1 ? `Exporter ${todo} fichiers en MP3` : 'Exporter en MP3';
+  $('goHint').textContent =
+    running ? '' :
+    recording ? 'Terminez l’enregistrement pour exporter.' :
+    !items.length ? 'Enregistrez ou importez une histoire pour commencer.' :
+    !todo ? 'Tout est exporté. Modifiez un fichier ou un réglage pour exporter à nouveau.' :
+    'MP3 mono, 16 kHz, 64 kbps' + (todo > 1 ? ' · regroupés dans un ZIP' : '');
+}
+
+/* Un réglage change : les fichiers déjà exportés sont à refaire (le résultat précédent reste écoutable) */
+function settingsChanged() {
+  let n = 0;
+  for (const it of items) if (it.status === 'done') { it.status = 'wait'; it.label = 'à refaire (réglages)'; n++; }
+  if (n) renderFiles();
+}
+
+/* ---------- Réglages : options et seuils des pauses ---------- */
+const DEF = { min: 1.5, keep: 0.8 };
+const P = { ...DEF };
+const r1 = (x) => Math.round(x * 10) / 10;
+(() => {
+  const m = parseFloat(store.get('mj.pauseMin')), k = parseFloat(store.get('mj.pauseKeep'));
+  if (m >= 0.5 && m <= 5) P.min = r1(m);
+  if (k >= 0.2 && k <= 3) P.keep = r1(k);
+  if (P.keep > P.min - 0.1) Object.assign(P, DEF);
+  for (const id of ['optVoice', 'optNoise', 'optPauses']) {
+    const v = store.get('mj.' + id);
+    if (v !== null) $(id).checked = v === '1';
+  }
+})();
+function renderPauses() {
+  $('pMin').value = P.min; $('pKeep').value = P.keep;
+  $('pMinV').textContent = sec(P.min) + ' s';
+  $('pKeepV').textContent = sec(P.keep) + ' s';
+  const ex = r1(Math.max(3, P.min + 1.5));
+  $('pEx').textContent = `Exemple : un blanc de ${sec(ex)} s devient ${sec(P.keep)} s ; un blanc de moins de ${sec(P.min)} s reste intact.`;
+  $('pReset').hidden = P.min === DEF.min && P.keep === DEF.keep;
+  const on = $('optPauses').checked;
+  $('pauses').classList.toggle('off', !on);
+  $('pMin').disabled = $('pKeep').disabled = !on;
+}
+function savePauses() { store.set('mj.pauseMin', P.min); store.set('mj.pauseKeep', P.keep); settingsChanged(); }
+$('pMin').addEventListener('input', (e) => {
+  P.min = r1(+e.target.value);
+  if (P.keep > P.min - 0.1) P.keep = Math.max(0.2, r1(P.min - 0.1));   // la pause gardée reste plus courte que le seuil
+  renderPauses();
+});
+$('pKeep').addEventListener('input', (e) => {
+  P.keep = r1(+e.target.value);
+  if (P.keep > P.min - 0.1) P.min = Math.min(5, r1(P.keep + 0.1));
+  renderPauses();
+});
+$('pMin').addEventListener('change', savePauses);
+$('pKeep').addEventListener('change', savePauses);
+$('pReset').addEventListener('click', () => { Object.assign(P, DEF); renderPauses(); savePauses(); });
+for (const id of ['optVoice', 'optNoise', 'optPauses']) {
+  $(id).addEventListener('change', () => { store.set('mj.' + id, $(id).checked ? '1' : '0'); renderPauses(); settingsChanged(); });
+}
+renderPauses();
+
+/* ---------- Titre ---------- */
+const recTitle = $('recTitle');
+function defaultTitle() {
+  const d = new Date();
+  return 'Histoire ' + d.toLocaleDateString('fr-FR').replace(/\//g, '-') + ' ' +
+         String(d.getHours()).padStart(2, '0') + 'h' + String(d.getMinutes()).padStart(2, '0');
+}
+function updateFname() {
+  const t = recTitle.value.trim();
+  $('fname').innerHTML = t
+    ? 'Nom du fichier : <b>' + esc(sanitize(t)) + '</b>' + (sanitize(t).length - 4 >= 35 ? ' (35 caractères max)' : '')
+    : 'Sans titre, le fichier s’appellera « Histoire » suivi de la date et de l’heure.';
+}
+recTitle.addEventListener('input', updateFname);
+updateFname();
+
+/* ---------- Micro : choix permanent, test, jauge ---------- */
+const recBtn = $('recBtn'), recLbl = $('recLbl'), micSel = $('micSel'), micTest = $('micTest');
+const mic = { on: false, ctx: null, proc: null, mute: null, src: null, stream: null, monitor: false };
+let chunks = null, recRate = 48000, recT0 = 0;
+let peakNow = 0, peakDisp = 0, peakHist = [], clipUntil = 0, lowSince = 0, meterTimer = null;
+
+async function fillMics() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+    micSel.innerHTML = '<option value="">Micro non disponible dans ce navigateur</option>'; return;
+  }
+  let devs = [];
+  try { devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput'); } catch (e) {}
+  const want = mic.on ? (mic.stream.getAudioTracks()[0]?.getSettings().deviceId || micSel.value) : (micSel.value || store.get('mj.mic') || '');
+  micSel.innerHTML = '';
+  const labelled = devs.filter(d => d.label);
+  if (!labelled.length) {
+    const o = document.createElement('option');
+    o.value = ''; o.textContent = 'Micro par défaut (« Tester le micro » affiche la liste)';
+    micSel.appendChild(o);
+    return;
+  }
+  for (const d of labelled) {
+    const o = document.createElement('option');
+    o.value = d.deviceId;
+    o.textContent = d.label.replace(/^(Default|Par défaut) - /, '★ ');
+    micSel.appendChild(o);
+  }
+  if (want && labelled.some(d => d.deviceId === want)) micSel.value = want;
+}
+if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener('devicechange', fillMics);
+fillMics();
+
+function getStream(id) {
+  return navigator.mediaDevices.getUserMedia({ audio: {
+    deviceId: id ? { exact: id } : undefined,
+    channelCount: 1, echoCancellation: false, noiseSuppression: false, autoGainControl: false,
+  } });
+}
+
+function onAudio(e) {
+  const d = e.inputBuffer.getChannelData(0);
+  let pk = 0;
+  if (recording && chunks) {
+    const pcm = new Int16Array(d.length);
+    for (let i = 0; i < d.length; i++) {
+      const s = d[i] > 1 ? 1 : d[i] < -1 ? -1 : d[i];
+      pcm[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+      const a = s < 0 ? -s : s; if (a > pk) pk = a;
+    }
+    chunks.push(pcm);
+  } else {
+    for (let i = 0; i < d.length; i++) { const a = d[i] < 0 ? -d[i] : d[i]; if (a > pk) pk = a; }
+  }
+  if (pk > peakNow) peakNow = pk;
+  if (pk > 0.89) clipUntil = performance.now() + 1500;   // ≈ −1 dB
+}
+
+function micError(msg) {
+  log(msg);
+  const h = $('recHint'); h.className = 'hot'; h.textContent = msg;
+}
+
+async function openMic() {
+  if (mic.on) return true;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    micError('Ce navigateur ne donne pas accès au micro. Ouvrez l’outil avec « Lancer Mixeur Jovial », dans Chrome, Edge, Firefox ou Safari.'); return false;
+  }
+  // Safari : le contexte audio doit être créé et relancé pendant le clic, avant toute attente
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const resumed = ctx.state === 'suspended' ? ctx.resume().catch(() => {}) : null;
+  let stream = null, err = null;
+  try { stream = await getStream(micSel.value); } catch (e) { err = e; }
+  if (!stream && micSel.value) { try { stream = await getStream(''); } catch (e) { err = e; } }
+  if (!stream) {
+    ctx.close().catch(() => {});
+    const n = err && err.name;
+    const why =
+      n === 'NotAllowedError' || n === 'SecurityError'
+        ? 'Micro refusé. Autorisez le micro pour cette page (sur Mac, aussi dans Réglages Système > Confidentialité et sécurité > Micro), puis réessayez.'
+      : n === 'NotFoundError' || n === 'OverconstrainedError'
+        ? 'Aucun micro trouvé. Branchez un micro, puis réessayez.'
+      : n === 'NotReadableError'
+        ? 'Le micro est déjà utilisé par une autre application (visio, Audacity…). Fermez-la, puis réessayez.'
+        : 'Micro inaccessible (' + n + '). Vérifiez qu’un micro est branché et autorisé pour cette page, puis réessayez.';
+    micError(why); return false;
+  }
+  await resumed;
+  if (ctx.state === 'suspended') await ctx.resume().catch(() => {});
+  const proc = ctx.createScriptProcessor(4096, 1, 1);
+  const mute = ctx.createGain(); mute.gain.value = 0;
+  proc.onaudioprocess = onAudio;
+  proc.connect(mute); mute.connect(ctx.destination);
+  const src = ctx.createMediaStreamSource(stream);
+  src.connect(proc);
+  Object.assign(mic, { on: true, ctx, proc, mute, src, stream });
+  await fillMics();
+  const id = stream.getAudioTracks()[0]?.getSettings().deviceId;
+  if (id && [...micSel.options].some(o => o.value === id)) micSel.value = id;
+  startMeter();
+  return true;
+}
+
+function closeMic() {
+  if (!mic.on) return;
+  try { mic.src.disconnect(); mic.proc.disconnect(); mic.mute.disconnect(); } catch (e) {}
+  mic.stream.getTracks().forEach(t => t.stop());
+  mic.ctx.close();
+  Object.assign(mic, { on: false, ctx: null, proc: null, mute: null, src: null, stream: null, monitor: false });
+  stopMeter();
+  micTest.classList.remove('on'); micTest.textContent = 'Tester le micro';
+}
+
+/* Changer de micro à tout moment, y compris pendant un enregistrement */
+micSel.addEventListener('change', async () => {
+  store.set('mj.mic', micSel.value);
+  if (!mic.on) return;
+  const name = micSel.options[micSel.selectedIndex]?.textContent || 'micro';
+  let stream;
+  try { stream = await getStream(micSel.value); }
+  catch (e) { micError('Impossible d’utiliser ce micro (' + e.name + ').'); await fillMics(); return; }
+  try {
+    const src = mic.ctx.createMediaStreamSource(stream);
+    try { mic.src.disconnect(); } catch (e) {}
+    mic.stream.getTracks().forEach(t => t.stop());
+    src.connect(mic.proc);
+    mic.src = src; mic.stream = stream;
+    log('Micro : ' + name + (recording ? ' (l’enregistrement continue)' : ''));
+  } catch (e) {
+    stream.getTracks().forEach(t => t.stop());
+    if (!recording) { const mon = mic.monitor; closeMic(); if (await openMic()) setMonitor(mon); }
+    else micError('Ce micro ne peut pas être branché pendant l’enregistrement : arrêtez puis relancez.');
+  }
+});
+
+function setMonitor(on) {
+  mic.monitor = on;
+  micTest.classList.toggle('on', on);
+  micTest.textContent = on ? 'Éteindre le micro' : 'Tester le micro';
+}
+micTest.addEventListener('click', async () => {
+  if (recording) return;
+  if (mic.on) { closeMic(); return; }
+  if (await openMic()) setMonitor(true);
+});
+
+const DB_MIN = -54;
+const dbToPct = (db) => Math.max(0, Math.min(100, (db - DB_MIN) / -DB_MIN * 100));
+function startMeter() {
+  stopMeter();
+  peakNow = 0; peakDisp = 0; peakHist = []; lowSince = 0;
+  meterTimer = setInterval(() => {
+    const now = performance.now();
+    peakDisp = Math.max(peakNow, peakDisp * 0.8); peakNow = 0;
+    const db = 20 * Math.log10(peakDisp + 1e-9);
+    peakHist.push([now, db]); while (peakHist.length && peakHist[0][0] < now - 1500) peakHist.shift();
+    const hold = Math.max(...peakHist.map(p => p[1]));
+    const fill = $('meterFill'), pk = $('meterPeak'), hint = $('recHint');
+    fill.style.width = dbToPct(db) + '%';
+    pk.style.left = 'calc(' + dbToPct(hold) + '% - 2px)'; pk.style.opacity = hold > DB_MIN ? .8 : 0;
+    $('meterDb').textContent = (hold > -90 ? Math.round(hold) : '−∞') + ' dB';
+    if (hold < -30) { if (!lowSince) lowSince = now; } else lowSince = 0;
+    let cls = 'ok', txt = 'Bon niveau';
+    if (now < clipUntil) { cls = 'hot'; txt = 'Saturé : reculez un peu'; }
+    else if (hold > -6) { cls = 'ok'; txt = 'Fort, ça va'; }
+    else if (lowSince && now - lowSince > 2500) { cls = 'low'; txt = 'Trop faible : rapprochez-vous'; }
+    else if (hold < -30) { cls = 'low'; txt = recording ? 'Silence…' : 'Parlez pour tester'; }
+    fill.className = 'mfill' + (cls === 'ok' ? '' : ' ' + cls);
+    hint.className = cls; hint.textContent = txt;
+    if (recording) $('recTime').textContent = fmtTime((now - recT0) / 1000);
+  }, 60);
+}
+function stopMeter() {
+  clearInterval(meterTimer); meterTimer = null;
+  $('meterFill').style.width = '0'; $('meterPeak').style.opacity = 0;
+  $('recHint').className = ''; $('recHint').textContent = 'Micro éteint'; $('meterDb').textContent = '';
+}
+
+/* ---------- Enregistrement ---------- */
+recBtn.addEventListener('click', () => recording ? stopRec() : startRec());
+
+async function startRec() {
+  const wasOn = mic.on;
+  if (!(await openMic())) return;
+  if (!wasOn) setMonitor(false);
+  chunks = []; recRate = mic.ctx.sampleRate; recT0 = performance.now();
+  recording = true;
+  recBtn.classList.add('on'); recLbl.textContent = 'Arrêter l’enregistrement';
+  micTest.disabled = true;
+  $('recTime').textContent = '0:00';
+  updateGo();
+}
+
+function stopRec() {
+  if (!recording) return;
+  recording = false;
+  const taken = chunks; chunks = null;
+  recBtn.classList.remove('on'); recLbl.textContent = 'Enregistrer';
+  micTest.disabled = false;
+  if (!mic.monitor) closeMic();
+  const total = taken.reduce((s, c) => s + c.length, 0);
+  if (total < recRate * 0.5) { micError('Enregistrement trop court, ignoré.'); updateGo(); return; }
+  const wav = makeWav(taken, total, recRate);
+  const title = recTitle.value.trim() || defaultTitle();
+  const file = new File([wav], title + '.wav', { type: 'audio/wav', lastModified: Date.now() });
+  file.isRecording = true;
+  recTitle.value = ''; updateFname();
+  const [it] = addFiles([file]);
+  if (it) openEditor(it, true);
+}
+
+function makeWav(chunks, total, rate) {
+  const buf = new ArrayBuffer(44 + total * 2);
+  const v = new DataView(buf);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + total * 2, true); w(8, 'WAVE');
+  w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  w(36, 'data'); v.setUint32(40, total * 2, true);
+  const out = new Int16Array(buf, 44);
+  let o = 0;
+  for (const c of chunks) { out.set(c, o); o += c.length; }
+  return new Blob([buf], { type: 'audio/wav' });
+}
+function floatToWav(f32, rate) {
+  const pcm = new Int16Array(f32.length);
+  for (let i = 0; i < f32.length; i++) {
+    const s = f32[i] > 1 ? 1 : f32[i] < -1 ? -1 : f32[i];
+    pcm[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+  }
+  return makeWav([pcm], pcm.length, rate);
+}
+
+window.addEventListener('beforeunload', (e) => {
+  if (recording || items.some(i => (i.file.isRecording || isEdited(i)) && i.status !== 'done')) { e.preventDefault(); e.returnValue = ''; }
+});
+
+/* ---------- Montage : couper, avec annuler / rétablir ---------- */
+const FADE = 80;   // 5 ms de fondu à chaque raccord, pour éviter les clics
+
+/* Retire la plage [a, b[ (en échantillons de la version montée) d'une liste de segments de l'original */
+function removeRange(segs, a, b) {
+  const out = [];
+  let c = 0;
+  for (const [s, e] of segs) {
+    const len = e - s, c0 = c, c1 = c + len;
+    c = c1;
+    if (b <= c0 || a >= c1) { out.push([s, e]); continue; }
+    if (a > c0) out.push([s, s + (a - c0)]);
+    if (b < c1) out.push([s + (b - c0), e]);
+  }
+  return out.filter(([s, e]) => e > s);
+}
+
+/* Version montée (Float32, 16 kHz) avec un court fondu à chaque raccord */
+function renderPCM(pcm, segs) {
+  const out = new Float32Array(segLen(segs));
+  let o = 0;
+  segs.forEach(([s, e], k) => {
+    out.set(pcm.subarray(s, e), o);
+    const n = Math.min(FADE, Math.floor((e - s) / 2));
+    if (k > 0) for (let i = 0; i < n; i++) out[o + i] *= i / n;
+    if (k < segs.length - 1) for (let i = 0; i < n; i++) out[o + (e - s) - 1 - i] *= i / n;
+    o += e - s;
+  });
+  return out;
+}
+
+async function decodeItem(it) {
+  if (it.pcm) return;
+  const ab = await it.file.arrayBuffer();
+  const oac = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 1, SR);
+  const buf = await new Promise((res, rej) => { const p = oac.decodeAudioData(ab, res, rej); if (p && p.catch) p.catch(rej); });
+  let pcm;
+  if (buf.numberOfChannels === 1) pcm = buf.getChannelData(0);
+  else {
+    pcm = new Float32Array(buf.length);
+    for (let c = 0; c < buf.numberOfChannels; c++) {
+      const d = buf.getChannelData(c);
+      for (let i = 0; i < d.length; i++) pcm[i] += d[i] / buf.numberOfChannels;
+    }
+  }
+  it.pcm = pcm;
+  it.segs = [[0, pcm.length]];
+  it.undo = []; it.redo = [];
+}
+
+const ed = { it: null, data: null, L: 0, v0: 0, v1: 0, sel: null, cursor: 0, joins: [], peak: 1,
+             play: null, drag: null, msg: '' };
+const wave = $('wave'), ovl = $('ovl'), wrapEl = $('wavewrap');
+let pctx = null;
+
+async function openEditor(it, scroll) {
+  if (it.status === 'run') return;
+  stopPlay();
+  ed.it = it;
+  $('editor').hidden = false; $('edEmpty').hidden = true;
+  $('edName').textContent = it.target.replace(/\.mp3$/, '');
+  $('edLoading').textContent = 'Chargement de l’onde…';
+  $('edLoading').style.display = 'flex';
+  renderFiles();
+  if (scroll) $('step2').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  try { await decodeItem(it); }
+  catch (e) {
+    $('edLoading').textContent = 'Ce format ne peut pas être ouvert dans le montage. Il peut quand même être exporté.';
+    return;
+  }
+  if (ed.it !== it) return;
+  $('edLoading').style.display = 'none';
+  ed.sel = null; ed.cursor = 0;
+  refresh(true);
+  ed.msg = 'Glissez sur l’onde pour sélectionner un loupé, puis « Couper la sélection ».';
+  info();
+}
+
+function closeEditor() {
+  stopPlay();
+  ed.it = null; ed.data = null;
+  $('editor').hidden = true; $('edEmpty').hidden = false;
+  renderFiles();
+}
+$('edClose').addEventListener('click', closeEditor);
+$('edDone').addEventListener('click', () => { stopPlay(); $('step3').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+
+function refresh(resetView) {
+  const it = ed.it;
+  ed.data = renderPCM(it.pcm, it.segs);
+  ed.L = ed.data.length;
+  ed.joins = []; let c = 0;
+  it.segs.forEach(([s, e], k) => { c += e - s; if (k < it.segs.length - 1) ed.joins.push(c); });
+  let pk = 0; const st = Math.max(1, Math.floor(ed.L / 400000));
+  for (let i = 0; i < ed.L; i += st) { const a = Math.abs(ed.data[i]); if (a > pk) pk = a; }
+  ed.peak = Math.max(pk, 0.02);
+  if (resetView || ed.v1 - ed.v0 > ed.L || ed.v1 <= ed.v0) { ed.v0 = 0; ed.v1 = ed.L; }
+  clampView();
+  ed.cursor = Math.min(ed.cursor, ed.L);
+  sizeCanvases(); drawWave(); drawOvl(); buttons();
+}
+
+function sizeCanvases() {
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.max(100, wrapEl.clientWidth), h = wrapEl.clientHeight;
+  for (const c of [wave, ovl]) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+}
+window.addEventListener('resize', () => { if (ed.it && ed.data) { sizeCanvases(); drawWave(); drawOvl(); } });
+
+function clampView() {
+  const span = Math.max(Math.min(ed.v1 - ed.v0, ed.L), Math.min(ed.L, SR / 2));
+  ed.v0 = Math.max(0, Math.min(ed.v0, ed.L - span));
+  ed.v1 = ed.v0 + span;
+  const sc = $('edScroll');
+  sc.max = Math.max(0, Math.round(ed.L - span)); sc.value = Math.round(ed.v0);
+  sc.disabled = span >= ed.L;
+}
+
+const RULER = 20;
+function xToS(x) { return Math.round(ed.v0 + (x / ovl.clientWidth) * (ed.v1 - ed.v0)); }
+function sToX(s, W) { return (s - ed.v0) / (ed.v1 - ed.v0) * W; }
+
+function drawWave() {
+  const g = wave.getContext('2d'), W = wave.width, H = wave.height, dpr = window.devicePixelRatio || 1;
+  g.clearRect(0, 0, W, H);
+  const top = RULER * dpr, mid = top + (H - top) / 2, amp = (H - top) / 2 * 0.9 / ed.peak;
+  g.fillStyle = '#e8dfcd'; g.fillRect(0, mid, W, Math.max(1, dpr * .5));
+  g.fillStyle = '#2f5a3f';
+  const span = ed.v1 - ed.v0, d = ed.data;
+  for (let x = 0; x < W; x++) {
+    const s0 = Math.floor(ed.v0 + x / W * span), s1 = Math.max(s0 + 1, Math.floor(ed.v0 + (x + 1) / W * span));
+    const st = Math.max(1, Math.floor((s1 - s0) / 600));
+    let mn = 0, mx = 0;
+    for (let i = s0; i < s1 && i < d.length; i += st) { const v = d[i]; if (v < mn) mn = v; else if (v > mx) mx = v; }
+    const y0 = mid - mx * amp, y1 = mid - mn * amp;
+    g.fillRect(x, y0, 1, Math.max(1, y1 - y0));
+  }
+  // raccords (coupes déjà faites)
+  g.strokeStyle = '#7a4f30'; g.lineWidth = 1.5 * dpr; g.setLineDash([4 * dpr, 3 * dpr]);
+  g.fillStyle = '#7a4f30'; g.font = `${11 * dpr}px system-ui, sans-serif`;
+  for (const j of ed.joins) {
+    if (j < ed.v0 || j > ed.v1) continue;
+    const x = sToX(j, W);
+    g.beginPath(); g.moveTo(x, top); g.lineTo(x, H); g.stroke();
+    g.fillText('✂', x + 3 * dpr, top + 13 * dpr);
+  }
+  g.setLineDash([]);
+}
+
+function niceStep(spanSec, W) {
+  const steps = [0.1, 0.2, 0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300, 600];
+  for (const s of steps) if (W / (spanSec / s) >= 70) return s;
+  return 1200;
+}
+
+function drawOvl() {
+  const g = ovl.getContext('2d'), W = ovl.width, H = ovl.height, dpr = window.devicePixelRatio || 1;
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = 'rgba(255,252,246,.95)'; g.fillRect(0, 0, W, RULER * dpr);
+  g.fillStyle = '#85765f'; g.font = `${10.5 * dpr}px system-ui, sans-serif`;
+  const spanSec = (ed.v1 - ed.v0) / SR, step = niceStep(spanSec, W / dpr);
+  for (let t = Math.ceil(ed.v0 / SR / step) * step; t <= ed.v1 / SR; t += step) {
+    const x = sToX(t * SR, W);
+    g.fillRect(x, (RULER - 5) * dpr, Math.max(1, dpr), 5 * dpr);
+    g.fillText(fmtTime(t, step < 1), x + 3 * dpr, 12 * dpr);
+  }
+  if (ed.sel) {
+    const x0 = sToX(ed.sel.a, W), x1 = sToX(ed.sel.b, W);
+    g.fillStyle = 'rgba(122, 79, 48, .17)'; g.fillRect(x0, RULER * dpr, x1 - x0, H);
+    g.fillStyle = '#7a4f30'; g.fillRect(x0, RULER * dpr, Math.max(1, dpr * 1.5), H); g.fillRect(x1 - dpr, RULER * dpr, Math.max(1, dpr * 1.5), H);
+  } else {
+    const x = sToX(ed.cursor, W);
+    g.fillStyle = '#2a2219'; g.fillRect(x - dpr * .75, RULER * dpr, Math.max(1, dpr * 1.5), H);
+  }
+  if (ed.play) {
+    const x = sToX(playPos(), W);
+    g.fillStyle = '#c49a3a'; g.fillRect(x - dpr, 0, 2 * dpr, H);
+  }
+}
+
+function info() {
+  const it = ed.it; if (!it || !ed.data) return;
+  const cut = (it.pcm.length - ed.L) / SR;
+  let s = 'Durée : <b>' + fmtTime(ed.L / SR) + '</b>' + (cut > 0.05 ? ' (−' + sec(cut) + ' s coupées)' : '');
+  if (ed.sel) s += ' · Sélection : <b>' + fmtTime(ed.sel.a / SR, true) + ' → ' + fmtTime(ed.sel.b / SR, true) +
+                   '</b> (' + sec((ed.sel.b - ed.sel.a) / SR) + ' s)';
+  else s += ' · Position : ' + fmtTime(ed.cursor / SR, true);
+  if (ed.msg) s += '<span class="msg">' + ed.msg + '</span>';
+  $('edInfo').innerHTML = s;
+}
+
+function buttons() {
+  const it = ed.it;
+  $('edCut').disabled = !ed.sel;
+  $('edUndo').disabled = !it || !it.undo || !it.undo.length;
+  $('edRedo').disabled = !it || !it.redo || !it.redo.length;
+  $('edReset').disabled = !it || !isEdited(it);
+  $('edPlay').textContent = ed.play ? '⏸ Pause' : (ed.sel ? '▶ Écouter la sélection' : '▶ Écouter');
+  info();
+}
+
+/* Sélection à la souris ou au doigt */
+ovl.addEventListener('pointerdown', (e) => {
+  if (!ed.data) return;
+  ovl.setPointerCapture(e.pointerId);
+  const s = Math.max(0, Math.min(ed.L, xToS(e.offsetX)));
+  const anchor = e.shiftKey ? (ed.sel ? (Math.abs(s - ed.sel.a) < Math.abs(s - ed.sel.b) ? ed.sel.b : ed.sel.a) : ed.cursor) : s;
+  ed.drag = { anchor, x: e.offsetX, moved: e.shiftKey };
+  if (e.shiftKey) ed.sel = { a: Math.min(anchor, s), b: Math.max(anchor, s) };
+  else { ed.sel = null; ed.cursor = s; }
+  ed.msg = '';
+  drawOvl(); buttons();
+});
+ovl.addEventListener('pointermove', (e) => {
+  if (!ed.drag) return;
+  if (Math.abs(e.offsetX - ed.drag.x) > 3) ed.drag.moved = true;
+  if (!ed.drag.moved) return;
+  const s = Math.max(0, Math.min(ed.L, xToS(e.offsetX)));
+  ed.sel = { a: Math.min(ed.drag.anchor, s), b: Math.max(ed.drag.anchor, s) };
+  if (e.offsetX > ovl.clientWidth - 8) pan((ed.v1 - ed.v0) * 0.03);
+  if (e.offsetX < 8) pan(-(ed.v1 - ed.v0) * 0.03);
+  drawOvl(); buttons();
+});
+ovl.addEventListener('pointerup', () => {
+  if (!ed.drag) return;
+  const moved = ed.drag.moved;
+  ed.drag = null;
+  if (ed.sel && ed.sel.b - ed.sel.a < SR * 0.05) ed.sel = null;
+  if (ed.play && !moved) startPlay();          // clic pendant la lecture : on repart d'ici
+  else if (ed.play) stopPlay();
+  drawOvl(); buttons();
+});
+
+/* Zoom et déplacement */
+function zoom(f, center) {
+  const span = ed.v1 - ed.v0;
+  const c = center ?? (ed.sel ? (ed.sel.a + ed.sel.b) / 2 : ed.cursor);
+  const ns = Math.max(SR / 2, Math.min(ed.L, span * f));
+  const r = span ? (c - ed.v0) / span : 0.5;
+  ed.v0 = c - ns * Math.max(0, Math.min(1, r)); ed.v1 = ed.v0 + ns;
+  clampView(); drawWave(); drawOvl();
+}
+function pan(ds) { ed.v0 += ds; ed.v1 += ds; clampView(); drawWave(); }
+ovl.addEventListener('wheel', (e) => {
+  if (!ed.data) return;
+  e.preventDefault();
+  if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) pan((e.deltaX || e.deltaY) / ovl.clientWidth * (ed.v1 - ed.v0));
+  else zoom(Math.exp(e.deltaY * 0.0015), xToS(e.offsetX));
+  drawOvl();
+}, { passive: false });
+$('zIn').addEventListener('click', () => ed.data && zoom(0.5));
+$('zOut').addEventListener('click', () => ed.data && zoom(2));
+$('zAll').addEventListener('click', () => { if (!ed.data) return; ed.v0 = 0; ed.v1 = ed.L; clampView(); drawWave(); drawOvl(); });
+$('edScroll').addEventListener('input', (e) => { const span = ed.v1 - ed.v0; ed.v0 = +e.target.value; ed.v1 = ed.v0 + span; drawWave(); drawOvl(); });
+
+/* Écoute */
+function playPos() {
+  if (!ed.play) return ed.cursor;
+  return Math.min(ed.play.end, ed.play.start + Math.round((pctx.currentTime - ed.play.t0) * SR));
+}
+function startPlay() {
+  stopPlay(true);
+  if (!ed.data || !ed.L) return;
+  pctx = pctx || new (window.AudioContext || window.webkitAudioContext)();
+  if (pctx.state === 'suspended') pctx.resume();
+  let start, end;
+  if (ed.sel) { start = ed.sel.a; end = ed.sel.b; }
+  else { start = ed.cursor >= ed.L - SR * 0.2 ? 0 : ed.cursor; end = ed.L; }
+  if (end - start < 10) return;
+  const buf = pctx.createBuffer(1, end - start, SR);
+  buf.copyToChannel(ed.data.subarray(start, end), 0);
+  const src = pctx.createBufferSource();
+  src.buffer = buf; src.connect(pctx.destination);
+  const p = { src, start, end, t0: pctx.currentTime + 0.02 };
+  src.start(p.t0);
+  src.onended = () => { if (ed.play === p) { ed.play = null; if (!ed.sel) ed.cursor = start; drawOvl(); buttons(); } };
+  ed.play = p;
+  buttons();
+  const tick = () => {
+    if (ed.play !== p) return;
+    const pos = playPos();
+    if (pos > ed.v1 || pos < ed.v0) { const span = ed.v1 - ed.v0; ed.v0 = pos - span * 0.05; ed.v1 = ed.v0 + span; clampView(); drawWave(); }
+    drawOvl();
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+function stopPlay(silent) {
+  if (!ed.play) return;
+  const p = ed.play; ed.play = null;
+  try { p.src.onended = null; p.src.stop(); } catch (e) {}
+  if (!silent) { drawOvl(); buttons(); }
+}
+$('edPlay').addEventListener('click', () => ed.play ? stopPlay() : startPlay());
+
+/* Couper, annuler, rétablir, revenir à l'original */
+function edited() {
+  const it = ed.it;
+  if (it.url) { URL.revokeObjectURL(it.url); it.url = null; }
+  if (it.status !== 'wait' || it.label !== 'à exporter') { it.status = 'wait'; it.label = 'modifié, à exporter'; }
+  renderFiles();
+}
+function applySegs(newSegs, msg, cursor) {
+  const it = ed.it;
+  stopPlay(true);
+  it.undo.push(it.segs); it.redo = [];
+  it.segs = newSegs;
+  ed.sel = null; ed.cursor = cursor ?? ed.cursor; ed.msg = msg;
+  refresh(); edited();
+}
+function cutSel() {
+  if (!ed.it || !ed.data) return;
+  if (!ed.sel) { ed.msg = 'Sélectionnez d’abord le passage à couper en glissant sur l’onde.'; info(); return; }
+  const { a, b } = ed.sel;
+  if (b - a >= ed.L - SR * 0.2) { ed.msg = 'Impossible de tout couper : il doit rester au moins un morceau.'; info(); return; }
+  applySegs(removeRange(ed.it.segs, a, b),
+    '✂ ' + sec((b - a) / SR) + ' s coupées. « Écouter » rejoue le raccord, « Annuler » le remet si besoin.',
+    Math.max(0, a - SR * 1.5));
+}
+function undo() {
+  const it = ed.it; if (!it || !it.undo || !it.undo.length) return;
+  stopPlay(true);
+  it.redo.push(it.segs); it.segs = it.undo.pop();
+  ed.sel = null; ed.msg = '↶ Coupe annulée.'; refresh(); edited();
+}
+function redo() {
+  const it = ed.it; if (!it || !it.redo || !it.redo.length) return;
+  stopPlay(true);
+  it.undo.push(it.segs); it.segs = it.redo.pop();
+  ed.sel = null; ed.msg = '↷ Coupe rétablie.'; refresh(); edited();
+}
+$('edCut').addEventListener('click', cutSel);
+$('edUndo').addEventListener('click', undo);
+$('edRedo').addEventListener('click', redo);
+$('edReset').addEventListener('click', () => {
+  if (!ed.it || !isEdited(ed.it)) return;
+  applySegs([[0, ed.it.pcm.length]], 'Enregistrement complet retrouvé. « Annuler » remet les coupes.', 0);
+});
+
+document.addEventListener('keydown', (e) => {
+  if (!ed.it || !ed.data || $('editor').hidden) return;
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' && e.target.type !== 'range' || tag === 'textarea' || tag === 'select') return;
+  if (tag === 'input' && e.target.type === 'range' && e.target.id !== 'edScroll') return;
+  if (tag === 'button' && e.key === ' ') return;    // Espace sur un bouton : action du bouton
+  const k = e.key.toLowerCase(), mod = e.ctrlKey || e.metaKey;
+  if (k === ' ' && !mod) { e.preventDefault(); ed.play ? stopPlay() : startPlay(); }
+  else if ((k === 'delete' || k === 'backspace') && !mod) { e.preventDefault(); cutSel(); }
+  else if (mod && k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+  else if (mod && (k === 'y' || (k === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
+  else if (k === 'escape') { ed.sel = null; drawOvl(); buttons(); }
+});
+
+/* ---------- Messages ---------- */
+function notify(msg) { $('status').textContent = msg; log(msg); }
+function log(msg) {
+  $('logBox').hidden = false;
+  logEl.textContent += (logEl.textContent ? '\n' : '') + msg;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+function logProgress(msg) {
+  $('status').textContent = msg;
+  const lines = logEl.textContent.split('\n');
+  const last = lines[lines.length - 1];
+  if (last && last.includes('%')) lines[lines.length - 1] = msg; else lines.push(msg);
+  logEl.textContent = lines.filter((l, i) => l || i).join('\n');
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+async function loadEngine() {
+  if (M && M.moteurPret()) return;
+  M = M || await import('./js/moteur.js');
+  log('Chargement du moteur de traitement…');
+  await M.chargerMoteur(MOTEUR, { onPct: (p) => logProgress('Chargement du moteur ' + p + '%') });
+  log('Moteur prêt.');
+}
+
+function download(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+}
+
+go.addEventListener('click', async () => {
+  const todo = items.filter(i => i.status !== 'done');
+  if (!todo.length) return;
+  if (ed.it && todo.includes(ed.it)) stopPlay();
+  running = true; updateGo();
+  logEl.textContent = '';
+  $('barWrap').classList.add('on'); bar.style.width = '0';
+  $('status').textContent = 'Préparation…';
+  const results = [];
+  try {
+    if (!M || !M.moteurPret()) $('status').textContent = 'Chargement du moteur de traitement…';
+    await loadEngine();
+    for (let i = 0; i < todo.length; i++) {
+      const it = todo[i];
+      if (!items.includes(it)) continue;
+      $('status').textContent = 'Traitement de « ' + it.target + ' »' + (todo.length > 1 ? ' (' + (i + 1) + '/' + todo.length + ')' : '') + '…';
+      setStatus(it, 'run', 'préparation…');
+      it.row.querySelectorAll('.fact button').forEach(b => b.disabled = true);
+      const prog = (p) => { bar.style.width = Math.round((i + Math.min(Math.max(p, 0), 1)) / todo.length * 100) + '%'; };
+      prog(0);
+      let inName = 'in' + i + (it.file.name.match(/\.[^.]+$/)?.[0] || '');
+      try {
+        let bytes;
+        if (isEdited(it)) {                           // version montée
+          inName = 'in' + i + '.wav';
+          bytes = new Uint8Array(await floatToWav(renderPCM(it.pcm, it.segs), SR).arrayBuffer());
+        } else bytes = new Uint8Array(await it.file.arrayBuffer());
+        const o = { voice: $('optVoice').checked, noise: $('optNoise').checked, pauses: $('optPauses').checked, min: P.min, keep: P.keep };
+        const { data: out } = await M.traiter(bytes, inName, o, {
+          prog, status: (s) => setStatus(it, 'run', s), log: (s) => log('« ' + it.target + ' » : ' + s),
+        });
+        const blob = new Blob([out], { type: 'audio/mpeg' });
+        if (it.url) URL.revokeObjectURL(it.url);
+        it.url = URL.createObjectURL(blob);
+        results.push({ name: it.target, data: out, blob });
+        setStatus(it, 'done', 'exporté · ' + fmtSize(out.length));
+      } catch (e) {
+        setStatus(it, 'err', 'échec');
+        log('Échec sur ' + it.file.name + ' : ' + e.message);
+      }
+    }
+    bar.style.width = '100%';
+    if (results.length === 0) { $('status').textContent = 'Aucun fichier exporté. Ouvrez « Détails techniques » pour comprendre.'; return; }
+    if (results.length === 1) {
+      download(results[0].blob, results[0].name);
+      $('status').textContent = '✓ « ' + results[0].name + ' » est dans vos téléchargements. Écoutez-le ci-dessus, puis copiez-le sur la boîte.';
+    } else {
+      const { makeZip } = await import('./js/zip.js');
+      download(makeZip(results), 'mixeur-jovial.zip');
+      $('status').textContent = '✓ ' + results.length + ' fichiers dans « mixeur-jovial.zip » (vos téléchargements). Décompressez-le vers la boîte.';
+    }
+  } catch (e) {
+    $('status').textContent = 'Le moteur n’a pas pu démarrer. Ouvrez l’outil avec « Lancer Mixeur Jovial » et vérifiez que le dossier « moteur » est présent.';
+    log('Erreur : ' + e.name + ' : ' + e.message);
+  } finally {
+    running = false;
+    renderFiles();
+  }
+});
+
+renderFiles();
+</script>
+</body>
+</html>

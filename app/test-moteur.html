@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mixeur Jovial · vérification du moteur</title>
+<style>
+  :root { --bg: #f3eee3; --card: #fffcf6; --line: #e5dccb; --green: #2f5a3f; --green-soft: #e4ece1;
+          --brown: #7a4f30; --ink: #2a2219; --muted: #85765f; --rust: #a9452f;
+          font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); line-height: 1.5; }
+  body { margin: 0; background: var(--bg); }
+  .page { max-width: 760px; margin: 0 auto; padding: 2.2rem 1.25rem 4rem; }
+  h1 { font: 600 1.6rem/1.2 "Iowan Old Style", Georgia, serif; color: #23452f; margin: 0 0 .3rem; }
+  .sub { color: var(--muted); margin: 0 0 1.6rem; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 1.4rem 1.5rem; margin-bottom: 1.1rem; }
+  button { font: inherit; border: none; border-radius: 12px; cursor: pointer; padding: .8rem 1.3rem; background: var(--green); color: #fff; font-weight: 600; }
+  button:disabled { opacity: .5; cursor: default; }
+  ul { list-style: none; padding: 0; margin: 0; }
+  li { display: flex; gap: .7rem; padding: .55rem 0; border-bottom: 1px solid #efe8da; }
+  li:last-child { border-bottom: none; }
+  .ic { flex: none; width: 1.6rem; height: 1.6rem; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: .85rem;
+        background: #efe8da; color: var(--muted); }
+  .ok .ic { background: var(--green-soft); color: var(--green); }
+  .ko .ic { background: #f6ddd5; color: var(--rust); }
+  .t b { display: block; }
+  .t span { font-size: .86rem; color: var(--muted); overflow-wrap: anywhere; }
+  #verdict { font-size: 1.1rem; font-weight: 650; }
+  #verdict.ok { color: var(--green); } #verdict.ko { color: var(--rust); }
+  audio { width: 100%; margin-top: .8rem; }
+  details { margin-top: .8rem; font-size: .85rem; color: var(--muted); }
+  pre { white-space: pre-wrap; font-size: .75rem; background: #faf6ee; padding: .7rem; border-radius: 10px; max-height: 16rem; overflow: auto; }
+  a { color: var(--green); }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Vérification du moteur</h1>
+  <p class="sub">Contrôle que le moteur du dossier « moteur » est bien sous licence LGPL, qu’il contient tout ce dont Mixeur Jovial a besoin, et qu’il produit un MP3 conforme. <a href="index.html">← Retour à l’outil</a></p>
+
+  <div class="card">
+    <button id="go">Lancer la vérification</button>
+    <p id="verdict"></p>
+    <ul id="checks"></ul>
+    <audio id="player" controls hidden></audio>
+    <details><summary>Journal technique</summary><pre id="raw"></pre></details>
+  </div>
+</div>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const MOTEUR = new URL('./moteur/', location.href);
+
+const BESOINS = {
+  filtres: ['aresample', 'aformat', 'anull', 'highpass', 'asetnsamples', 'astats', 'ametadata', 'ebur128', 'volume',
+            'afftdn', 'aselect', 'asetpts', 'equalizer', 'deesser', 'acompressor', 'alimiter', 'loudnorm'],
+  formats: ['mp3', 'wav', 'mov', 'ogg', 'matroska', 'flac', 'aiff', 'asf', 'aac'],
+  decodeurs: ['mp3float', 'aac', 'flac', 'vorbis', 'opus', 'wmav2', 'pcm_s16le', 'pcm_s16be'],
+  encodeurs: ['libmp3lame'],
+  sorties: ['mp3'],
+};
+
+function check(titre) {
+  const li = document.createElement('li');
+  li.innerHTML = `<span class="ic">…</span><span class="t"><b>${titre}</b><span></span></span>`;
+  $('checks').appendChild(li);
+  return (ok, detail) => {
+    li.className = ok ? 'ok' : 'ko';
+    li.querySelector('.ic').textContent = ok ? '✓' : '✗';
+    li.querySelector('.t span').textContent = detail || '';
+    return ok;
+  };
+}
+const raw = (s) => { $('raw').textContent += s + '\n'; };
+
+/* Exécute une commande et renvoie son journal, même si le code de sortie n'est pas 0 */
+async function journal(M, args) {
+  try { return await M.run(args); } catch (e) { return e.journal || []; }
+}
+/* Noms présents dans une liste « ffmpeg -filters / -decoders / -demuxers… » */
+function noms(lines) {
+  const set = new Set();
+  for (const l of lines) {
+    const m = l.match(/^\s*[A-Z.|\->]+\s+([\w,]+)\s+\S/);
+    if (m) m[1].split(',').forEach(n => set.add(n));
+  }
+  return set;
+}
+
+/* Fichier de test : 12 s, voix simulée (sons modulés) avec un blanc de 3 s au milieu */
+function wavTest() {
+  const rate = 44100, n = rate * 12, d = new Float32Array(n);
+  let seed = 1; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647 - 0.5);
+  for (let i = 0; i < n; i++) {
+    const t = i / rate, parle = t < 4.5 || t > 7.5;
+    const syll = 0.5 + 0.5 * Math.sin(2 * Math.PI * 3.2 * t);
+    const voix = parle ? 0.25 * syll * (Math.sin(2 * Math.PI * 180 * t) + 0.5 * Math.sin(2 * Math.PI * 360 * t) + 0.25 * Math.sin(2 * Math.PI * 900 * t)) : 0;
+    d[i] = voix + 0.004 * rnd();
+  }
+  const buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true);
+  v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, d[i])) * 32767, true);
+  return new Uint8Array(buf);
+}
+
+/* Lit l'en-tête de la première trame MP3 (après une éventuelle étiquette ID3) */
+function enteteMP3(b) {
+  let p = 0;
+  if (b[0] === 0x49 && b[1] === 0x44 && b[2] === 0x33) p = 10 + ((b[6] << 21) | (b[7] << 14) | (b[8] << 7) | b[9]);
+  while (p < b.length - 4 && !(b[p] === 0xFF && (b[p + 1] & 0xE0) === 0xE0)) p++;
+  const h1 = b[p + 1], h2 = b[p + 2], h3 = b[p + 3];
+  const version = (h1 >> 3) & 3, layer = (h1 >> 1) & 3, br = (h2 >> 4) & 15, sr = (h2 >> 2) & 3, mode = (h3 >> 6) & 3;
+  const RATES = { 3: [44100, 48000, 32000], 2: [22050, 24000, 16000], 0: [11025, 12000, 8000] };
+  const BR_V2 = [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160];
+  const BR_V1 = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320];
+  return { couche3: layer === 1, frequence: (RATES[version] || [])[sr], debit: (version === 3 ? BR_V1 : BR_V2)[br], mono: mode === 3 };
+}
+
+$('go').addEventListener('click', async () => {
+  $('go').disabled = true; $('checks').innerHTML = ''; $('raw').textContent = ''; $('verdict').textContent = '';
+  let tout = true;
+  const fin = () => {
+    $('verdict').className = tout ? 'ok' : 'ko';
+    $('verdict').textContent = tout ? '✓ Moteur conforme : prêt à être utilisé et distribué avec Mixeur Jovial.'
+                                    : '✗ Moteur non conforme : voir les lignes en rouge.';
+    $('go').disabled = false;
+  };
+  if (location.protocol === 'file:') {
+    check('Ouverture de la page')(false, 'Ouvrez cette page avec « Lancer Mixeur Jovial », pas en double-cliquant dessus.');
+    tout = false; return fin();
+  }
+  let M;
+  const c0 = check('Chargement du moteur');
+  try {
+    M = await import('./js/moteur.js');
+    const t0 = performance.now();
+    await M.chargerMoteur(MOTEUR, { onPct: (p) => c0(true, 'téléchargement ' + p + ' %') });
+    let taille = '';
+    try { const r = await fetch(new URL('core/ffmpeg-core.wasm', MOTEUR), { method: 'HEAD' }); taille = (r.headers.get('Content-Length') / 1048576).toFixed(1).replace('.', ',') + ' Mo, '; } catch (e) {}
+    c0(true, taille + 'chargé en ' + ((performance.now() - t0) / 1000).toFixed(1).replace('.', ',') + ' s');
+  } catch (e) { c0(false, e.message); tout = false; return fin(); }
+
+  try {
+    const info = await (await fetch(new URL('INFOS.json', MOTEUR))).json();
+    check('Fiche d’identité')(true, `profil ${info.profil} · FFmpeg ${info.ffmpeg} · ffmpeg.wasm ${info['ffmpeg.wasm']?.version} · compilé le ${info.date}`);
+  } catch (e) { check('Fiche d’identité')(false, 'INFOS.json absent du dossier moteur'); }
+
+  const lic = (await journal(M, ['-L'])).join('\n'); raw('$ ffmpeg -L\n' + lic);
+  const lgpl = /Lesser General Public License/i.test(lic) && !/GNU General Public License/i.test(lic);
+  tout &= check('Licence LGPL')(lgpl, lgpl ? 'FFmpeg déclare la licence GNU LGPL' : 'licence GPL ou inconnue : ce moteur ne doit pas être distribué');
+
+  const conf = (await journal(M, ['-buildconf'])).join('\n'); raw('$ ffmpeg -buildconf\n' + conf);
+  const interdit = ['--enable-gpl', '--enable-nonfree', '--enable-libx264', '--enable-libx265', '--enable-postproc'].filter(f => conf.includes(f));
+  tout &= check('Aucun composant GPL')(!interdit.length && conf.includes('--enable-libmp3lame'),
+    interdit.length ? 'présent : ' + interdit.join(', ') : 'compilé sans --enable-gpl, avec LAME (LGPL)');
+
+  const listes = {
+    filtres: noms(await journal(M, ['-hide_banner', '-filters'])),
+    formats: noms(await journal(M, ['-hide_banner', '-demuxers'])),
+    decodeurs: noms(await journal(M, ['-hide_banner', '-decoders'])),
+    encodeurs: noms(await journal(M, ['-hide_banner', '-encoders'])),
+    sorties: noms(await journal(M, ['-hide_banner', '-muxers'])),
+  };
+  const LIB = { filtres: 'Filtres audio', formats: 'Formats d’entrée', decodeurs: 'Décodeurs', encodeurs: 'Encodeur MP3', sorties: 'Format de sortie' };
+  for (const k of Object.keys(BESOINS)) {
+    const manque = BESOINS[k].filter(n => !listes[k].has(n));
+    tout &= check(LIB[k])(!manque.length, manque.length ? 'manquant : ' + manque.join(', ') : BESOINS[k].length + '/' + BESOINS[k].length + ' présents');
+  }
+
+  const c1 = check('Traitement complet d’un fichier de 12 s (avec un blanc de 3 s)');
+  try {
+    const t0 = performance.now();
+    const { data, plan } = await M.traiter(wavTest(), 'test.wav', { voice: true, noise: true, pauses: true, min: 1.5, keep: 0.8 },
+      { prog: (p) => c1(true, Math.round(p * 100) + ' %'), log: raw });
+    const h = enteteMP3(data);
+    const ctx = new AudioContext();
+    const dur = (await ctx.decodeAudioData(data.buffer.slice(0))).duration; ctx.close();
+    const conforme = h.couche3 && h.frequence === 16000 && h.debit === 64 && h.mono;
+    const coupe = dur > 8.8 && dur < 10.6 && plan && plan.cuts.length >= 1;
+    const ok = conforme && coupe;
+    tout &= c1(ok, `${h.mono ? 'mono' : 'stéréo'}, ${h.frequence} Hz, ${h.debit} kbps · durée ${dur.toFixed(1).replace('.', ',')} s (attendu ≈ 9,8 s)` +
+      ` · ${(data.length / 1024).toFixed(0)} Ko · ${((performance.now() - t0) / 1000).toFixed(1).replace('.', ',')} s de calcul` +
+      (conforme ? '' : ' · format non conforme') + (coupe ? '' : ' · le blanc n’a pas été raccourci'));
+    const p = $('player'); p.src = URL.createObjectURL(new Blob([data], { type: 'audio/mpeg' })); p.hidden = false;
+  } catch (e) { tout &= c1(false, e.message); raw(String(e.journal ? e.journal.join('\n') : e)); }
+  tout = !!tout;
+  fin();
+});
+</script>
+</body>
+</html>

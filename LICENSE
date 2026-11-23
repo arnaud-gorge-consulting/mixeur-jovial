@@ -1,0 +1,8 @@
+Copyright (c) 2026 Arnaud Gorge (Arnaud Gorge Consulting). Tous droits réservés.
+
+Le code source de Mixeur Jovial (dossiers app/ et moteur-build/, hors composants tiers) est protégé par le
+droit d'auteur. Aucune licence d'utilisation, de copie, de modification ou de distribution n'est accordée
+sans l'accord écrit préalable de l'auteur.
+
+Les composants tiers (FFmpeg, LAME, zlib, ffmpeg.wasm) restent régis par leur propre licence :
+voir THIRD_PARTY_NOTICES.md.

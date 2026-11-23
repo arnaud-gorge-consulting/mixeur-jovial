@@ -1,0 +1,16 @@
+# Moteur compilé : produit par moteur-build/, distribué à part (Artifacts GitHub ou archive)
+app/moteur/
+moteur-build/_travail/
+moteur-build/_sortie/
+*.tar.gz
+
+# Fichiers audio et exports (voix, données personnelles, droits)
+*.mp3
+*.wav
+*.m4a
+*.zip
+
+# Système
+.DS_Store
+Thumbs.db
+desktop.ini

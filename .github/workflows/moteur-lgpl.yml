@@ -1,0 +1,43 @@
+name: Moteur LGPL
+
+# Compile le moteur de Mixeur Jovial (FFmpeg + LAME en WebAssembly, sans GPL)
+# sur les serveurs de GitHub. Lancement : onglet « Actions » > « Moteur LGPL » > « Run workflow ».
+# Résultat : en bas de la page de l'exécution, rubrique « Artifacts ».
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version de ffmpeg.wasm (auto = dernière 0.12)"
+        default: "auto"
+        required: true
+
+jobs:
+  compiler:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        profil: [leger, complet]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Compiler le moteur (${{ matrix.profil }})
+        run: bash moteur-build/build.sh ${{ matrix.profil }} ${{ inputs.version }}
+      - name: Moteur prêt à copier dans app/moteur
+        uses: actions/upload-artifact@v4
+        with:
+          name: moteur-${{ matrix.profil }}
+          path: moteur-build/_sortie/${{ matrix.profil }}/moteur
+      - name: Sources exactes (obligation LGPL)
+        uses: actions/upload-artifact@v4
+        with:
+          name: sources-moteur-${{ matrix.profil }}
+          path: |
+            moteur-build/_sortie/${{ matrix.profil }}/sources-moteur-${{ matrix.profil }}.tar.gz
+            moteur-build/_sortie/${{ matrix.profil }}/modifications-ffmpeg.wasm.patch
+            moteur-build/_sortie/${{ matrix.profil }}/moteur-config.json
