@@ -39,6 +39,14 @@ bash moteur-build/build.sh leger      # ou : complet
 
 ## Vérifier le moteur obtenu
 
+Sur GitHub, la vérification est **automatique** : après la compilation, le workflow ouvre la page de vérification
+dans un vrai navigateur (Chromium) et échoue si un contrôle n'est pas vert. Le rapport est joint au moteur
+(`VERIFICATION.txt`). Résultats de la première compilation (23/11/2026, ffmpeg.wasm v0.12.10, FFmpeg n5.1.4) :
+tous les contrôles sont verts pour les deux profils ; moteur léger 2,2 Mo, moteur complet 15,5 Mo
+(contre 31 Mo pour le moteur GPL public).
+
+Pour vérifier à la main :
+
 1. Double-clique sur `app/Lancer Mixeur Jovial.bat`.
 2. Dans l'outil, clique sur le lien **Vérifier le moteur**, en bas de la page.
 3. Clique sur **Lancer la vérification**.
