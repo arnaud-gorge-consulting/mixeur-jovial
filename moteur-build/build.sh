@@ -35,6 +35,7 @@ COMMIT="$(git rev-parse HEAD)"
 etape "2/6 Retrait des composants GPL (profil $PROFIL)"
 python3 "$ICI/patch_ffmpegwasm.py" . "$PROFIL"
 git diff --stat
+echo "--- Dockerfile adapté ---"; grep -nE "^FROM|enable-|^ENV FFMPEG_LIBS|^\s+-l" Dockerfile || true
 git diff > "$SORTIE/modifications-ffmpeg.wasm.patch"
 
 etape "3/6 Compilation (longue)"

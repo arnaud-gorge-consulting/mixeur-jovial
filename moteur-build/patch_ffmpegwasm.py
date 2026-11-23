@@ -21,10 +21,10 @@ LEGER = {
     "protocol": ["file"],
     "demuxer": ["mp3", "wav", "aac", "aiff", "asf", "flac", "matroska", "mov", "ogg", "caf", "w64"],
     "decoder": ["mp3", "mp3float", "aac", "aac_latm", "alac", "flac", "vorbis", "opus",
-                "wmav1", "wmav2", "mjpeg", "png",
+                "wmav1", "wmav2", "mjpeg",
                 "pcm_s16le", "pcm_s16be", "pcm_s24le", "pcm_s24be", "pcm_s32le", "pcm_s32be",
                 "pcm_f32le", "pcm_f32be", "pcm_f64le", "pcm_u8", "pcm_alaw", "pcm_mulaw"],
-    "parser": ["mpegaudio", "aac", "aac_latm", "flac", "vorbis", "opus", "mjpeg", "png"],
+    "parser": ["mpegaudio", "aac", "aac_latm", "flac", "vorbis", "opus", "mjpeg"],
     "encoder": ["libmp3lame", "pcm_s16le"],
     "muxer": ["mp3", "wav", "null"],
     "filter": ["aresample", "aformat", "anull", "null", "format", "highpass", "lowpass",
@@ -36,9 +36,10 @@ LEGER_FLAGS = ["--disable-everything"] + [
     f"--enable-{kind}={','.join(names)}" for kind, names in LEGER.items()
 ]
 
-KEEP_STAGES = {"lame-builder", "zlib-builder"}
-KEEP_LIBS = {"mp3lame", "z", "m", "pthread"}
-DROP_FLAG = re.compile(r"(?<!\S)--enable-(gpl|nonfree|version3|postproc|lib(?!mp3lame\b)[\w-]+)(?!\S)")
+# zlib n'est pas compilée à part dans ffmpeg.wasm (elle venait d'étapes supprimées) et l'outil n'en a pas besoin
+KEEP_STAGES = {"lame-builder"}
+KEEP_LIBS = {"mp3lame", "m", "pthread"}
+DROP_FLAG = re.compile(r"(?<!\S)--enable-(gpl|nonfree|version3|postproc|zlib|lib(?!mp3lame\b)[\w-]+)(?!\S)")
 DROP_LINK = re.compile(r"(?<!\S)-l(?!(?:%s)(?!\S))[\w+-]+(?!\S)" % "|".join(map(re.escape, KEEP_LIBS)))
 
 
