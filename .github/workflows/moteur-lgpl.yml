@@ -52,3 +52,46 @@ jobs:
             moteur-build/_sortie/${{ matrix.profil }}/sources-moteur-${{ matrix.profil }}.tar.gz
             moteur-build/_sortie/${{ matrix.profil }}/modifications-ffmpeg.wasm.patch
             moteur-build/_sortie/${{ matrix.profil }}/moteur-config.json
+
+  publier:
+    # Paquet prêt à l'emploi (outil + moteur léger vérifié) et sources, publiés dans « Releases »
+    needs: compiler
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: art
+      - name: Assembler et publier
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          JOUR=$(date +%Y%m%d); TAG="v2-moteur-$JOUR-${{ github.run_number }}"
+          mkdir -p paquet/Mixeur-Jovial
+          cp -r app/. paquet/Mixeur-Jovial/
+          cp -r art/moteur-leger paquet/Mixeur-Jovial/moteur
+          cp PRISE-EN-MAIN.md LICENSE THIRD_PARTY_NOTICES.md paquet/Mixeur-Jovial/
+          chmod +x "paquet/Mixeur-Jovial/Lancer Mixeur Jovial (Mac).command"
+          (cd paquet && zip -qr ../Mixeur-Jovial.zip Mixeur-Jovial)
+          mkdir -p m && cp -r art/moteur-complet m/moteur && (cd m && zip -qr ../moteur-complet.zip moteur)
+          cp art/sources-moteur-leger/sources-moteur-leger.tar.gz art/sources-moteur-complet/sources-moteur-complet.tar.gz .
+          {
+            echo "## Mixeur Jovial, prêt à l'emploi"
+            echo
+            echo "1. Télécharger **Mixeur-Jovial.zip** ci-dessous et le décompresser."
+            echo "2. Windows : double-cliquer sur « Lancer Mixeur Jovial.bat ». Mac : clic droit sur « Lancer Mixeur Jovial (Mac).command » > Ouvrir."
+            echo
+            echo "Mode d'emploi détaillé : PRISE-EN-MAIN.md (inclus dans le paquet)."
+            echo
+            echo "### Vérification automatique du moteur (Chromium)"
+            echo '```'
+            cat art/moteur-leger/VERIFICATION.txt
+            echo '```'
+            echo
+            echo "Autres fichiers : moteur-complet.zip (secours, à décompresser dans le dossier de l'outil) ; sources-moteur-*.tar.gz (sources exactes, obligation LGPL)."
+          } > notes.md
+          gh release create "$TAG" Mixeur-Jovial.zip moteur-complet.zip sources-moteur-leger.tar.gz sources-moteur-complet.tar.gz \
+            --repo "${{ github.repository }}" --title "Mixeur Jovial v2 · moteur du $(date +%d/%m/%Y)" --notes-file notes.md --latest

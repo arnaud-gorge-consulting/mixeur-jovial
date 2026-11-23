@@ -16,9 +16,14 @@ aucun envoi de fichier, aucune connexion nécessaire.
 
 ## Utilisation
 
+**Le plus simple : télécharger le paquet prêt à l'emploi dans [Releases](../../releases) et suivre [PRISE-EN-MAIN.md](PRISE-EN-MAIN.md).**
+
+
 - **Windows** : double-cliquer sur `app/Lancer Mixeur Jovial.bat`. Un petit serveur local démarre (`lancer.ps1`, PowerShell inclus dans Windows, accessible uniquement depuis cet ordinateur) et l'outil s'ouvre dans le navigateur.
 - **Mac** : clic droit sur `app/Lancer Mixeur Jovial (Mac).command`, puis **Ouvrir** (la première fois seulement : macOS bloque les scripts téléchargés). Le serveur utilise Python 3 ; s'il manque, macOS propose de l'installer.
 - **Sur un site web** (par exemple chez un éditeur) : déposer le dossier `app/` tel quel sur un serveur en HTTPS. Aucun lanceur n'est alors nécessaire.
+
+Apparence : deux thèmes, « Nature » (par défaut) et « Conteuse », au choix en bas de page ou par l'adresse `?theme=conteuse`.
 
 Le micro n'est accessible qu'en HTTPS ou sur `localhost`. C'est pourquoi l'outil ne s'ouvre pas par un simple double-clic sur `index.html`.
 
