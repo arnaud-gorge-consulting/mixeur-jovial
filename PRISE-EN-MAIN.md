@@ -16,8 +16,12 @@ Ce guide part de zéro : rien à installer, tout se passe sur ton ordinateur.
 
 **Windows**
 
-1. Fais un clic droit sur **Mixeur-Jovial.zip**, puis **Extraire tout…**, puis **Extraire**.
-2. Tu obtiens un dossier **Mixeur-Jovial**. Vérifie qu'il contient bien :
+1. **D'abord, débloque le ZIP.** Sans cette étape, Windows bloquera le lanceur (« les fichiers provenant d'Internet peuvent être dangereux »), parfois sans proposer « Exécuter quand même ».
+   - Clic droit sur **Mixeur-Jovial.zip**, puis **Propriétés**.
+   - Dans l'onglet **Général**, tout en bas, coche **Débloquer**, puis **OK**.
+   - Si la case n'apparaît pas, le fichier est déjà débloqué : passe à la suite.
+2. Fais un clic droit sur **Mixeur-Jovial.zip**, puis **Extraire tout…**, puis **Extraire**.
+3. Tu obtiens un dossier **Mixeur-Jovial**. Vérifie qu'il contient bien :
    - `Lancer Mixeur Jovial.bat`
    - `index.html`
    - un dossier `moteur` (avec dedans un dossier `core`)
@@ -114,6 +118,7 @@ Tes réglages (micro, seuils des pauses, apparence) sont conservés par le navig
 | Bandeau « Moteur absent » | Le dossier `moteur` manque ou est mal placé | Retélécharge le ZIP de la page Releases et extrais-le en entier |
 | « Micro refusé » | Autorisation refusée dans le navigateur ou, sur Mac, dans le système | Clique sur le cadenas à gauche de l'adresse, puis Micro, puis Autoriser ; sur Mac, voir l'encadré de l'étape 5 |
 | « Le micro est déjà utilisé… » | Une visio ou Audacity occupe le micro | Ferme l'autre application |
+| « Les fichiers provenant d'Internet peuvent être dangereux », lanceur bloqué | Le ZIP n'a pas été débloqué avant l'extraction | Supprime le dossier extrait, débloque le ZIP (étape 2), puis extrais-le à nouveau |
 | La page ne s'ouvre plus | La fenêtre noire (ou le Terminal) a été fermée | Relance le lanceur |
 | Le navigateur ne s'ouvre pas tout seul | Navigateur par défaut non défini | Ouvre-le et va sur `http://localhost:8765` (l'adresse s'affiche dans la fenêtre noire) |
 | Export très long | Fichier très long, ordinateur lent | Patiente (la barre avance) ou découpe l'histoire en plusieurs fichiers |
